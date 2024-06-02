@@ -1,0 +1,58 @@
+name: Compile - Ubuntu
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.apt-cache
+          key: ${{ runner.os }}-apt-${{ hashFiles('**/compile-for-ubuntu.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-apt-
+
+      - name: Install Dependencies
+        run: |
+          wget https://dev.mysql.com/get/mysql-apt-config_0.8.30-1_all.deb -O /tmp/mysql-apt-config_all.deb
+          sudo dpkg -i /tmp/mysql-apt-config_all.deb
+          sudo apt-get update
+          sudo apt-get install -y wget lsb-release gnupg git clang cmake make gcc g++ libmysqlclient-dev libssl-dev libbz2-dev libreadline-dev libncurses-dev libboost-all-dev p7zip
+          sudo update-alternatives --install /usr/bin/cc cc /usr/bin/clang 100
+          sudo update-alternatives --install /usr/bin/c++ c++ /usr/bin/clang 100
+
+      - name: Clone Eluna
+        run: git clone https://github.com/ElunaLuaEngine/ElunaTrinityWotlk.git
+
+      - name: Add Rochet2's Modifications
+        run: |
+          cd ElunaTrinityWotlk
+          git submodule init
+          git submodule update
+          git remote add rochet2 https://github.com/Rochet2/TrinityCore.git
+          git fetch rochet2
+          git pull --rebase rochet2 gomove_3.3.5
+          git pull --rebase rochet2 objscale_3.3.5
+
+      - name: Compile TrinityCore
+        run: |
+          mkdir -p build
+          cd build
+          cmake ../ -DCMAKE_INSTALL_PREFIX=/opt/build -DSERVERS=1 -DTOOLS=1 -DSCRIPTS="minimal-dynamic"
+          make -j $(nproc) install
+
+      - name: Archive production artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          compression-level: 9
+          if-no-files-found: error
+          path: |
+            /opt/build
+            /contrib/extractor.sh
+          retention-days: 90
