@@ -32,6 +32,7 @@ jobs:
 
       - name: Compile TrinityCore
         run: |
+          cd ElunaTrinityWotlk
           mkdir -p build
           cd build
           cmake ../ -DCMAKE_INSTALL_PREFIX=/opt/build -DSERVERS=1 -DTOOLS=1 -DSCRIPTS="minimal-dynamic"
