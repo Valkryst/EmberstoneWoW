@@ -27,18 +27,8 @@ jobs:
           sudo update-alternatives --install /usr/bin/cc cc /usr/bin/clang 100
           sudo update-alternatives --install /usr/bin/c++ c++ /usr/bin/clang 100
 
-      - name: Clone Eluna
+      - name: Clone TrinityCore with Eluna
         run: git clone https://github.com/ElunaLuaEngine/ElunaTrinityWotlk.git
-
-      - name: Add Rochet2's Modifications
-        run: |
-          cd ElunaTrinityWotlk
-          git submodule init
-          git submodule update
-          git remote add rochet2 https://github.com/Rochet2/TrinityCore.git
-          git fetch rochet2
-          git pull --rebase rochet2 gomove_3.3.5
-          git pull --rebase rochet2 objscale_3.3.5
 
       - name: Compile TrinityCore
         run: |
